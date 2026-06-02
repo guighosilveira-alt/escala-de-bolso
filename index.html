@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escala de Bolso V2 - Evoluída</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        :root { 
+            --bg-body: #f8f9fa; 
+            --bg-card: #ffffff; 
+            --text-color: #212529; 
+            --border-color: #dee2e6; 
+            --login-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        }
+        body.dark-theme { 
+            --bg-body: #121212; 
+            --bg-card: #1e1e1e; 
+            --text-color: #e0e0e0; 
+            --border-color: #333333; 
+            --login-gradient: linear-gradient(135deg, #0f2042 0%, #173366 100%);
+        }
+        body { 
+            background-color: var(--bg-body); 
+            color: var(--text-color); 
+            transition: background 0.2s, color 0.2s; 
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        
+        /* ====== TELA DE LOGIN MODERNA ====== */
+        .login-screen {
+            background: var(--login-gradient);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+        .card-login { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px; 
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25) !important;
+        }
+        body.dark-theme .card-login {
+            background: rgba(30, 30, 30, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        /* LOGO PERSONALIZADO EB */
+        .login-logo-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #ffffff;
+            font-size: 26px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            box-shadow: 0 8px 16px rgba(30, 60, 114, 0.3);
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+        }
+        .logo-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e3c72;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+        body.dark-theme .logo-title {
+            color: #ffffff;
+        }
+        .logo-subtitle {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #6c757d;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .card, .list-group-item, .form-control, .form-select { 
+            background-color: var(--bg-card) !important; 
+            color: var(--text-color) !important; 
+            border-color: var(--border-color) !important; 
+        }
+        .status-PRESENTE { background-color: #00b894 !important; color: white !important; border: 2px solid #009473 !important; }
+        .status-FALTA { background-color: #d63031 !important; color: white !important; border: 2px solid #b32425 !important; }
+        .status-FOLGA { background-color: #f1c40f !important; color: black !important; border: 2px solid #d4ac0d !important; }
+        .status-ATESTADO { background-color: #0984e3 !important; color: white !important; border: 2px solid #026aa7 !important; }
+
+        /* Ajustes finos anti-corte de PDF */
+        .pdf-conteudo { background: var(--bg-card); padding: 20px; border-radius: 12px; box-sizing: border-box; width: 100%; overflow: hidden; }
+        .pdf-header-banner { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border-radius: 8px; padding: 12px; }
+        .item-bloco-operador { page-break-inside: avoid; break-inside: avoid; }
+        .escondido { display: none !important; }
+        .chk-base { width: 20px; height: 20px; cursor: pointer; }
+        
+        .rodape-pdf-data { display: none; font-size: 10px; color: #777; text-align: center; margin-top: 20px; border-top: 1px solid #ddd; padding-top: 5px; }
+    </style>
+</head>
+<body class="p-2">
+
+    <div id="telaLogin" class="login-screen">
+        <div class="card card-login p-4 shadow-lg border-0">
+            <div class="login-logo-box">
+                <div class="logo-icon">Eb</div>
+                <h3 class="logo-title">Escala de Bolso</h3>
+                <span class="logo-subtitle">Gestor de Equipes</span>
+            </div>
+            
+            <div id="loginErro" class="alert alert-danger p-2 small text-center escondido">Usuário ou senha incorretos!</div>
+            <div class="mb-2"><input type="text" id="loginUser" class="form-control py-2.5" placeholder="Usuário (admin)" autocomplete="off"></div>
+            <div class="mb-4"><input type="password" id="loginPass" class="form-control py-2.5" placeholder="Senha"></div>
+            <button onclick="efetuarLogin()" class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none;">Entrar no Sistema</button>
+        </div>
+    </div>
+
+    <div id="appPrincipal" class="container escondido" style="max-width: 600px; padding-top: 10px;">
+        
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold m-0">Gestão de Equipe</h4>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleTema()">🌓 Tema</button>
+                <button onclick="efetuarLogout()" class="btn btn-sm btn-outline-danger">Sair</button>
+            </div>
+        </div>
+
+        <ul class="nav nav-pills nav-fill mb-3 bg-white p-1 rounded border small">
+            <li class="nav-item"><button class="nav-link active fw-bold" id="aba-equipe" onclick="mudarAba('equipe')">👥 Equipe</button></li>
+            <li class="nav-item"><button class="nav-link fw-bold" id="aba-escala" onclick="mudarAba('escala')">📅 Painel Diário</button></li>
+            <li class="nav-item"><button class="nav-link fw-bold" id="aba-metricas" onclick="mudarAba('metricas')">📊 Faltas do Dia</button></li>
+        </ul>
+
+        <div id="secao-equipe">
+            <div class="card p-3 mb-3 shadow-sm border-0">
+                <h6 class="fw-bold mb-2 text-muted" style="font-size: 13px;">Incluir Novo Operador</h6>
+                <div class="row g-2 mb-2">
+                    <div class="col-12"><input type="text" id="novoNome" class="form-control form-control-sm" placeholder="Nome completo" autocomplete="off"></div>
+                </div>
+                <div class="row g-2">
+                    <div class="col-6"><input type="text" id="novaMatricula" class="form-control form-control-sm" placeholder="Nº Matrícula (Opcional)" autocomplete="off"></div>
+                    <div class="col-6">
+                        <select id="novaCategoria" class="form-select form-select-sm">
+                            <option value="OP. DIA">OP. DIA</option>
+                            <option value="OP. NOITE">OP. NOITE</option>
+                            <option value="EMP. DIA">EMP. DIA</option>
+                            <option value="EMP. NOITE">EMP. NOITE</option>
+                            <option value="AP.">AP.</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="adicionarColaborador()" class="btn btn-success btn-sm fw-bold mt-2">＋ Adicionar na Base</button>
+            </div>
+
+            <div class="card p-2 mb-3 shadow-sm border-0">
+                <div class="row g-2 mb-2">
+                    <div class="col-12"><input type="text" id="buscaNome" onkeyup="filtrarDashboard()" class="form-control form-control-sm" placeholder="🔍 Buscar operador na base..." autocomplete="off"></div>
+                </div>
+                <div class="row g-1 text-center row-cols-3 mb-2">
+                    <div class="p-1"><button onclick="definirFiltroCategoria('TODOS')" id="btn-flt-TODOS" class="btn btn-xs btn-primary w-100 small py-1.5" style="font-size:11px; font-weight:bold;">TODOS</button></div>
+                    <div class="p-1"><button onclick="definirFiltroCategoria('OP. DIA')" id="btn-flt-OPDIA" class="btn btn-xs btn-outline-secondary w-100 small py-1.5" style="font-size:11px; font-weight:bold;">OP. DIA</button></div>
+                    <div class="p-1"><button onclick="definirFiltroCategoria('OP. NOITE')" id="btn-flt-OPNOITE" class="btn btn-xs btn-outline-secondary w-100 small py-1.5" style="font-size:11px; font-weight:bold;">OP. NOITE</button></div>
+                    <div class="p-1"><button onclick="definirFiltroCategoria('EMP. DIA')" id="btn-flt-EMPDIA" class="btn btn-xs btn-outline-secondary w-100 small py-1.5" style="font-size:11px; font-weight:bold;">EMP. DIA</button></div>
+                    <div class="p-1"><button onclick="definirFiltroCategoria('EMP. NOITE')" id="btn-flt-EMPNOITE" class="btn btn-xs btn-outline-secondary w-100 small py-1.5" style="font-size:11px; font-weight:bold;">EMP. NOITE</button></div>
+                    <div class="p-1"><button onclick="definirFiltroCategoria('AP.')" id="btn-flt-AP" class="btn btn-xs btn-outline-secondary w-100 small py-1.5" style="font-size:11px; font-weight:bold;">AP.</button></div>
+                </div>
+                <button onclick="limparSelecaoDoDia()" class="btn btn-outline-danger btn-sm fw-bold w-100 mt-1" style="font-size: 12px;">🧹 Limpar Selecionados do Dia</button>
+            </div>
+
+            <div class="row g-2 mb-3" id="listaColaboradoresBase">
+                </div>
+        </div>
+
+        <div id="secao-escala" class="escondido">
+            <div class="card p-2.5 mb-3 border-0 shadow-sm">
+                <div class="row g-2 align-items-center">
+                    <div class="col-6">
+                        <input type="date" id="dataEscalaNavegacao" onchange="atualizarTelaEscala()" class="form-control form-control-sm fw-bold text-primary">
+                    </div>
+                    <div class="col-6">
+                        <select id="filtroTipoEscalaAtiva" onchange="atualizarTelaEscala()" class="form-select form-select-sm fw-bold text-success">
+                            <option value="OP.">📅 ESCALA OP.</option>
+                            <option value="EMP.">📅 ESCALA EMPACOTARES</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="area-impressao" class="pdf-conteudo shadow-sm mb-3">
+                <div class="pdf-header-banner text-center mb-3">
+                    <h5 class="fw-bold text-white m-0" id="tituloDataBr">ESCALA DIÁRIA</h5>
+                    <small id="subtituloTipoEscala" class="text-warning fw-bold small"></small>
+                </div>
+
+                <div class="mb-3" id="lista-operadores-escala">
+                    </div>
+
+                <div class="card p-2.5 mb-3 item-bloco-operador">
+                    <h6 class="fw-bold small mb-1">Ocorrências / Observações</h6>
+                    <textarea id="txtOcorrencias" oninput="guardarEstadoOcorrenciaTemporaria()" class="form-control border-0 bg-light p-2" rows="3" placeholder="Digite relatos..." style="font-size: 13px;"></textarea>
+                </div>
+
+                <div class="p-2.5 rounded shadow-sm border item-bloco-operador" style="background: var(--bg-card);">
+                    <div class="row text-center g-1 small fw-bold">
+                        <div class="col-3 text-success">🟢 PRES: <span id="c-pres">0</span></div>
+                        <div class="col-3 text-danger">🔴 FAL: <span id="c-fal">0</span></div>
+                        <div class="col-3 text-warning">🟡 FOL: <span id="c-fol">0</span></div>
+                        <div class="col-3 text-info">🔵 ATE: <span id="c-ate">0</span></div>
+                    </div>
+                </div>
+                
+                <div id="rodapePdf" class="rodape-pdf-data"></div>
+            </div>
+
+            <div class="d-grid gap-2 mb-4">
+                <button onclick="salvarEscalaDia()" class="btn btn-primary py-2.5 fw-bold shadow" style="background-color: #1e3c72; border: none;">💾 Gravar Dados do Dia</button>
+                <div class="row g-2">
+                    <div class="col-4"><button onclick="gerarPDF()" class="btn btn-success w-100 py-2 fw-bold shadow small" style="font-size:12px;">📄 Criar PDF</button></div>
+                    <div class="col-4"><button onclick="enviarEmailEscalaCompleta()" class="btn btn-dark w-100 py-2 fw-bold shadow small" style="font-size:12px;">✉️ Enviar E-mail</button></div>
+                    <div class="col-4"><button onclick="enviarWhatsApp()" class="btn text-white w-100 py-2 fw-bold shadow small" style="background-color: #25D366; border:none; font-size:12px;">💬 Disparar Zap</button></div>
+                </div>
+                <button onclick="limparPainelDia()" class="btn btn-sm btn-outline-danger fw-bold">🧹 Resetar Dia Selecionado</button>
+            </div>
+        </div>
+
+        <div id="secao-metricas" class="escondido">
+            <div class="card p-3 mb-3 border-0 shadow-sm">
+                <h6 class="fw-bold text-danger mb-2" style="font-size: 13px;">Relatório de Faltas do Dia Selecionado (Geral)</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle small m-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Nome</th>
+                                <th>Categoria</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaFaltasCorpo">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card p-3 border-0 shadow-sm mb-4">
+                <h6 class="fw-bold mb-2 text-muted" style="font-size: 13px;">Enviar Relatório por E-mail</h6>
+                <div class="mb-3">
+                    <input type="email" id="emailDestino" class="form-control form-control-sm" placeholder="Ex: supervisor@empresa.com">
+                </div>
+                <div class="row g-2">
+                    <div class="col-6"><button onclick="gerarPDFFaltas()" class="btn btn-sm btn-success w-100 fw-bold py-2">📄 Salvar PDF Faltas</button></div>
+                    <div class="col-6"><button onclick="enviarEmailFaltas()" class="btn btn-sm btn-dark w-100 fw-bold py-2">✉️ Enviar por E-mail</button></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-3 mt-4 border-0 shadow-sm mb-5">
+            <h6 class="fw-bold mb-2 text-danger" style="font-size: 12px;">Segurança e Manutenção</h6>
+            <div class="input-group input-group-sm mb-3">
+                <input type="password" id="novaSenhaAdmin" class="form-control" placeholder="Nova senha admin">
+                <button onclick="alterarSenha()" class="btn btn-dark fw-bold">Alterar Chave</button>
+            </div>
+            <button onclick="resetTotalDispositivo()" class="btn btn-danger btn-sm fw-bold w-100 py-2">⚠️ Apagar Tudo e Resetar App</button>
+        </div>
+
+    </div>
+
+    <script>
+        let alteracoesTemporariasStatus = {};
+
+        function iniciarBancos() {
+            if(!localStorage.getItem('usuarios')) localStorage.setItem('usuarios', JSON.stringify({admin: 'admin123'}));
+            if(!localStorage.getItem('colaboradores')) localStorage.setItem('colaboradores', JSON.stringify([]));
+            if(!localStorage.getItem('escala_ativos_dia')) localStorage.setItem('escala_ativos_dia', JSON.stringify({}));
+            if(!localStorage.getItem('escala_dados')) localStorage.setItem('escala_dados', JSON.stringify({}));
+            if(!localStorage.getItem('escala_ocorrencias')) localStorage.setItem('escala_ocorrencias', JSON.stringify({}));
+        }
+        
+        iniciarBancos();
+
+        let usuarioLogado = false;
+        let filtroCategoriaAtual = 'TODOS';
+        const estadosCiclo = ['PRESENTE', 'FALTA', 'FOLGA', 'ATESTADO'];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('dataEscalaNavegacao').value = hoje;
+            if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-theme');
+            limparDadosAntigos();
+        });
+
+        function resetTotalDispositivo() {
+            if (confirm("ATENÇÃO: Isso apagará DEFINITIVAMENTE todos os colaboradores e históricos antigos do seu celular. Deseja continuar?")) {
+                localStorage.clear();
+                iniciarBancos();
+                alert("O sistema foi resetado com sucesso!");
+                location.reload();
+            }
+        }
+
+        function limparDadosAntigos() {
+            const hoje = new Date();
+            const escalaDados = JSON.parse(localStorage.getItem('escala_dados')) || {};
+            const ocorrencias = JSON.parse(localStorage.getItem('escala_ocorrencias')) || {};
+            const ativosDia = JSON.parse(localStorage.getItem('escala_ativos_dia')) || {};
+
+            Object.keys(escalaDados).forEach(dataKey => {
+                const dataRegistro = new Date(dataKey + 'T00:00:00');
+                const diferencaDias = (hoje - dataRegistro) / (1000 * 60 * 60 * 24);
+                if (diferencaDias > 15) {
+                    delete escalaDados[dataKey];
+                    if(ocorrencias[dataKey]) delete ocorrencias[dataKey];
+                    if(ativosDia[dataKey]) delete ativosDia[dataKey];
+                }
+            });
+
+            localStorage.setItem('escala_dados', JSON.stringify(escalaDados));
+            localStorage.setItem('escala_ocorrencias', JSON.stringify(ocorrencias));
+            localStorage.setItem('escala_ativos_dia', JSON.stringify(ativosDia));
+        }
+
+        function efectuarLogin() {
+            // Criado mapeamento para aceitar ambas chamadas (com ou sem 'c')
+            efetuarLogin();
+        }
+
+        function efetuarLogin() {
+            const u = document.getElementById('loginUser').value.trim();
+            const s = document.getElementById('loginPass').value.trim();
+            const usuarios = JSON.parse(localStorage.getItem('usuarios'));
+
+            if (usuarios[u] && usuarios[u] === s) {
+                usuarioLogado = true;
+                document.getElementById('telaLogin').classList.add('escondido');
+                document.getElementById('appPrincipal').classList.remove('escondido');
+                renderizarColaboradoresBase();
+            } else {
+                document.getElementById('loginErro').classList.remove('escondido');
+            }
+        }
+
+        function efetuarLogout() {
+            usuarioLogado = false;
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPass').value = '';
+            document.getElementById('telaLogin').classList.remove('escondido');
+            document.getElementById('appPrincipal').classList.add('escondido');
+        }
+
+        function alterarSenha() {
+            const nova = document.getElementById('novaSenhaAdmin').value.trim();
+            if(!nova) return;
+            const usuarios = JSON.parse(localStorage.getItem('usuarios'));
+            usuarios['admin'] = nova;
+            localStorage.setItem('usuarios', JSON.stringify(usuarios));
+            alert('Senha alterada com sucesso!');
+            document.getElementById('novaSenhaAdmin').value = '';
+        }
+
+        function toggleTema() {
+            document.body.classList.toggle('dark-theme');
+            localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+        }
+
+        function mudarAba(aba) {
+            document.getElementById('secao-equipe').classList.add('escondido');
+            document.getElementById('secao-escala').classList.add('escondido');
+            document.getElementById('secao-metricas').classList.add('escondido');
+            document.getElementById('aba-equipe').classList.remove('active');
+            document.getElementById('aba-escala').classList.remove('active');
+            document.getElementById('aba-metricas').classList.remove('active');
+
+            document.getElementById(`secao-${aba}`).classList.remove('escondido');
+            document.getElementById(`aba-${aba}`).classList.add('active');
+
+            if(aba === 'escala') {
+                alteracoesTemporariasStatus = {}; 
+                atualizarTelaEscala();
+            }
+            if(aba === 'metricas') gerarRelatorioFaltas();
+        }
+
+        // --- ABA 1: BASE ---
+        function adicionarColaborador() {
+            const nome = document.getElementById('novoNome').value.trim();
+            const matricula = document.getElementById('novaMatricula').value.trim();
+            const categoria = document.getElementById('novaCategoria').value;
+            if(!nome) return;
+
+            const colabs = JSON.parse(localStorage.getItem('colaboradores')) || [];
+            colabs.push({ 
+                id: Date.now().toString(), 
+                nome: nome, 
+                matricula: matricula || '', 
+                categoria: categoria 
+            });
+            localStorage.setItem('colaboradores', JSON.stringify(colabs));
+
+            document.getElementById('novoNome').value = '';
+            document.getElementById('novaMatricula').value = '';
+            renderizarColaboradoresBase();
+        }
+
+        function renderizarColaboradoresBase() {
+            const colabs = JSON.parse(localStorage.getItem('colaboradores')) || [];
+            const dataIso = document.getElementById('dataEscalaNavegacao').value;
+            const dbAtivos = JSON.parse(localStorage.getItem('escala_ativos_dia')) || {};
+            const ativosDia = dbAtivos[dataIso] || [];
+
+            colabs.sort((a,b) => a.nome.localeCompare(b.nome));
+            const container = document.getElementById('listaColaboradoresBase');
+            container.innerHTML = '';
+
+            colabs.forEach(c => {
+                const estaMarcado = ativosDia.includes(c.id) ? 'checked' : '';
+                const categoriaLimpa = c.categoria || "OP. DIA";
+                const textoMatricula = c.matricula ? ` <small class="text-muted font-monospace" style="font-size:11px;">[Matr: ${c.matricula}]</small>` : '';
+                
+                container.innerHTML += `
+                    <div class="col-12 d-flex align-items-center bg-white border rounded p-2 item-colab-linha" data-categoria="${categoriaLimpa}" data-nome="${c.nome.toLowerCase()}">
+                        <input type="checkbox" class="form-check-input chk-base me-3 ms-2" onchange="vincularEscalaAtiva('${c.id}', this)" ${estaMarcado}>
+                        <div class="text-start flex-grow-1 py-1 fw-bold d-flex justify-content-between align-items-center">
+                            <span>${c.nome}${textoMatricula}</span>
+                            <span class="badge bg-secondary opacity-75">${categoriaLimpa}</span>
+                        </div>
+                        <button onclick="deletarColaborador('${c.id}')" class="btn btn-link text-danger text-decoration-none px-3 fw-bold fs-5 border-0">×</button>
+                    </div>
+                `;
+            });
+            filtrarDashboard();
+        }
+
+        // NOVA FUNÇÃO DE LIMPEZA DE SELEÇÃO
+        function limparSelecaoDoDia() {
+            const dataIso = document.getElementById('dataEscalaNavegacao').value;
+            if(!dataIso) return;
+
+            if(confirm("Deseja desmarcar todos os operadores selecionados para a escala deste dia?")) {
+                let dbAtivos = JSON.parse(localStorage.getItem('escala_ativos_dia')) || {};
+                dbAtivos[dataIso] = []; // Esvazia os ativos do dia selecionado
+                localStorage.setItem('escala_ativos_dia', JSON.stringify(dbAtivos));
+                
+                // Limpa status pendentes em memória
+                alteracoesTemporariasStatus = {};
+
+                // Atualiza a exibição visual instantaneamente
+                renderizarColaboradoresBase();
+            }
+        }
+
+        function vincularEscalaAtiva(id, chk) {
+            const dataIso = document.getElementById('dataEscalaNavegacao').value;
+            let dbAtivos = JSON.parse(localStorage.getItem('escala_ativos_dia')) || {};
+            if(!dbAtivos[dataIso]) dbAtivos[dataIso] = [];
+
+            if(chk.checked) {
+                if(!dbAtivos[dataIso].includes(id)) dbAtivos[dataIso].push(id);
+            } else {
+                dbAtivos[dataIso] = dbAtivos[dataIso].filter(x => x !== id);
+                if(alteracoesTemporariasStatus[id]) delete alteracoesTemporariasStatus[id];
+            }
+            localStorage.setItem('escala_ativos_dia', JSON.stringify(dbAtivos));
+        }
+
+        function deletarColaborador(id) {
+            if(!confirm('Excluir definitivo este operador da base?')) return;
+            let colabs = JSON.parse(localStorage.getItem('colaboradores')) || [];
+            colabs = colabs.filter(c => c.id !== id);
+            localStorage.setItem('colaboradores', JSON.stringify(colabs));
+            
+            let dbAtivos = JSON.parse(localStorage.getItem('escala_ativos_dia')) || {};
+            Object.keys(dbAtivos).forEach(d => {
+                dbAtivos[d] = dbAtivos[d].filter(x => x !== id);
+            });
+            localStorage.setItem('escala_ativos_dia', JSON.stringify(dbAtivos));
+            if(alteracoesTemporariasStatus[id]) delete alteracoesTemporariasStatus[id];
+
+            renderizarColaboradoresBase();
+        }
+
+        function definirFiltroCategoria(cat) {
+            filtroCategoriaAtual = cat;
+            const mapeamentoBotoes = {
+                'TODOS': 'btn-flt-TODOS', 'OP. DIA': 'btn-flt-OPDIA', 'OP. NOITE': 'btn-flt-OPNOITE',
+                'EMP. DIA': 'btn-flt-EMPDIA', 'EMP. NOITE': 'btn-flt-EMPNOITE', 'AP.': 'btn-flt-AP'
+            };
+            Object.keys(mapeamentoBotoes).forEach(x => {
+                const btn = document.getElementById(mapeamentoBotoes[x]);
+                if(x === cat) btn.classList.replace('btn-outline-secondary', 'btn-primary');
+                else btn.classList.replace('btn-primary', 'btn-outline-secondary');
+            });
+            filtrarDashboard();
+        }
+
+        function filtrarDashboard() {
+            const busca = document.getElementById('buscaNome').value.toLowerCase();
+            document.querySelectorAll('.item-colab-linha').forEach(linha => {
+                const n = inline = linha.getAttribute('data-nome') || '';
+                const c = linha.getAttribute('data-categoria') || 'OP. DIA';
+                const bateTexto = n.includes(busca);
+                let bateCategoria = false;
+
+                if(filtroCategoriaAtual === 'TODOS') bateCategoria = true;
+                else if(filtroCategoriaAtual === 'OP. DIA') bateCategoria = (c === 'OP. DIA');
+                else if(filtroCategoriaAtual === 'OP. NOITE') bateCategoria = (c === 'OP. NOITE');
+                else if(filtroCategoriaAtual === 'EMP. DIA') bateCategoria = (c === 'EMP. DIA');
+                else if(filtroCategoriaAtual === 'EMP. NOITE') bateCategoria = (c === 'EMP. NOITE');
+                else if(filtroCategoriaAtual === 'AP.') bateCategoria = (c === 'AP.');
+
+                linha.style.setProperty('display', (bateTexto && bateCategoria) ? 'flex' : 'none', 'important');
+            });
+        }
+
+        // --- ABA 2: PAINEL DIÁRIO ---
+        function atualizarTelaEscala() {
+            const dataIso = document.getElementById('dataEscalaNavegacao').value;
+            if(!dataIso) return;
+
+            const partes = dataIso.split('-');
+            const tipoEscala = document.getElementById('filtroTipoEscalaAtiva').value;
+            
+            document.getElementById('tituloDataBr').innerText = `ESCALA DIÁRIA: ${partes[2]}/${partes[1]}/${partes[0]}`;
+            document.getElementById('subtituloTipoEscala').innerText = tipoEscala === 'OP.' ? 'CATEGORIA: OPERADORES' : 'CATEGORIA: EMPACOTARES';
+
+            const colabs = JSON.parse(localStorage.getItem('colaboradores')) || [];
+            const dbAtivos = JSON.parse(localStorage.getItem('escala_ativos_dia')) || {};
+            const ativosDia = dbAtivos[dataIso] || [];
+            
+            const dbDados = JSON.parse(localStorage.getItem('escala_dados')) || {};
+            const escalaDadosSalvos = dbDados[dataIso] || {};
+            
+            const dbOcorr = JSON.parse(localStorage.getItem('escala_ocorrencias')) || {};
+            document.getElementById('txtOcorrencias').value = dbOcorr[dataIso] || '';
+
+            const container = document.getElementById('lista-operadores-escala');
+            container.innerHTML = '';
+
+            const filtrados = colabs.filter(c => {
+                const categoriaValida = c.categoria || 'OP. DIA';
+                return ativosDia.includes(c.id) && categoriaValida.startsWith(tipoEscala);
+            });
+
+            if(filtrados.length === 0) {
+                container.innerHTML = `<div class="text-center text-muted py-4">📭 Nenhum colaborador escalado nesta categoria para hoje. Selecione-os na aba Equipe.</div>`;
+                atualizarContadores();
+                return;
+            }
+
+            filtrados.forEach(c => {
+                let statusAtual = 'PRESENTE';
+                if (alteracoesTemporariasStatus[c.id] !== undefined) {
+                    statusAtual = alteracoesTemporariasStatus[c.id];
+                } else if (escalaDadosSalvos[c.id] !== undefined) {
+                    statusAtual = escalaDadosSalvos[c.id];
+                }
+                
+                const matTexto = c.matricula ? ` | M: ${c.matricula}` : '';
+                container.innerHTML += `
+                    <div class="item-bloco-operador mb-2 d-flex gap-1 align-items-center" id="box-${c.id}">
+                        <button type="button" onclick="ciclarStatus('${c.id}')" id="btn-status-${c.id}" 
+                            class="btn status-${statusAtual} text-start flex-grow-1 py-2.5 px-3 d-flex justify-content-between align-items-center" 
+                            data-id="${c.id}" data-status="${statusAtual}">
+                            <span class="fw-bold text-nome-txt">${c.nome} <small style="font-size:10px; opacity:0.8;">(${c.categoria || 'OP. DIA'}${matTexto})</small></span>
+                            <span class="badge bg-black bg-opacity-25 text-white" style="font-size: 10px;">${statusAtual}</span>
+                        </button>
+                        <button onclick="removerColaboradorDaEscala('${c.id}')" class="btn btn-danger py-2 px-2.5 fw-bold">×</button>
+                    </div>
+                `;
+            });
+
+            atualizarContadores();
+        }
+
+        function ciclarStatus(id) {
+            const btn = document.getElementById('btn-status-' + id);
+            let atual = btn.getAttribute('data-status');
+            let proximoIdx = (estadosCiclo.indexOf(atual) + 1) % estadosCiclo.length;
+            let proximo = estadosCiclo[proximoIdx];
+            
+            btn.setAttribute('data-status', proximo);
+            btn.className = `btn status-${proximo} text-start flex-grow-1 py-2.5 px-3 d-flex justify-content-between align-items-center`;
+            btn.querySelector('.badge').innerText = proximo;
+            
+            alteracoesTemporariasStatus[id] = proximo;
+            atualizarContadores();
+        }
+
+        function guardarEstadoOcorrenciaTemporaria() {
+            const dataIso = document.getElementById('dataEscalaNavegacao').value;
+            const dbOcorr = JSON.parse(localStorage.getItem('escala_ocorrencias')) || {};
+            dbOcorr[dataIso] = document.getElementById('txtOcorrencias').value;
+            localStorage.setItem('escala_ocorrencias', JSON.stringify(dbOcorr));
+        }
+
+        function removerColaboradorDaEscala(id) {
+            const dataIso = document.getElementById('dataEscalaNavegacao').value;
+            let dbAtivos = JSON.parse(localStorage.getItem('escala_ativos_dia')) || {};
+            if(dbAtivos[dataIso]) {
+                dbAtivos[dataIso] = dbAtivos[dataIso].filter(x => x !== id);
+                localStorage.setItem('escala_ativos_dia', JSON.stringify(dbAtivos));
+            }
+            if(alteracoesTemporariasStatus[id]) delete alteracoesTemporariasStatus[id];
+            renderizarColaboradoresBase();
+            atualizarTelaEscala();
+        }
+
+        function atualizarContadores() {
+            document.getElementById('c-pres').innerText = document.querySelectorAll('#lista-operadores-escala [data-status="PRESENTE"]').length;
+            document.getElementById('c-fal').innerText = document.querySelectorAll('#lista-operadores-escala [data-status="FALTA"]').length;
+            document.getElementById('c-fol').innerText = document.querySelectorAll('#lista-operadores-escala [data-status="FOLGA"]').length;
+            document.getElementById('c-ate').innerText = document.querySelectorAll('#lista-operadores-escala [data-status="ATESTADO"]').length;
+        }
+
+        function salvarEscalaDia() {
+            const dataIso = document.getElementById('dataEscalaNavegacao').value;
+            const escalaDadosGlobal = JSON.parse(localStorage.getItem('escala_dados')) || {};
+            const ocorrenciasGlobal = JSON.parse(localStorage.getItem('escala_ocorrencias')) || {};
+
+            if(!escalaDadosGlobal[dataIso]) escalaDadosGlobal[dataIso] = {};
+
+            document.querySelectorAll('#lista-operadores-escala [data-status]').forEach(btn => {
+                const id = btn.getAttribute('data-id');
+                const status = btn.getAttribute('data-status');
+                alteracoesTemporariasStatus[id] = status;
+            });
+
+            Object.keys(alteracoesTemporariasStatus).forEach(id => {
+                escalaDadosGlobal[dataIso][id] = alteracoesTemporariasStatus[id];
+            });
+
+            ocorrenciasGlobal[dataIso] = document.getElementById('txtOcorrencias').value;
+            
+            localStorage.setItem('escala_dados', JSON.stringify(escalaDadosGlobal));
+            localStorage.setItem('escala_ocorrencias', JSON.stringify(ocorrenciasGlobal));
+            
+            alert('Dados gravados com sucesso (Ambas categorias atualizadas)!');
+            alteracoesTemporariasStatus = {}; 
+            atualizarTelaEscala();
+        }
+
+        function limparPainelDia() {
+            if(!confirm("Deseja resetar COMPLETAMENTE a escala de Operadores, Empacotadores e Ocorrências deste dia selecionado?")) return;
+            
+            const dataIso = document.getElementById('dataEscalaNavegacao').value;
+            let dbAtivos = JSON.parse(localStorage.getItem('escala_ativos_dia')) || {};
+            let dbDados = JSON.parse(localStorage.getItem('escala_dados')) || {};
+            let dbOcorr = JSON.parse(localStorage.getItem('escala_ocorrencias')) || {};
+
+            if(dbAtivos[dataIso]) delete dbAtivos[dataIso];
+            if(dbDados[dataIso]) delete dbDados[dataIso];
+            if(dbOcorr[dataIso]) delete dbOcorr[dataIso];
+
+            localStorage.setItem('escala_ativos_dia', JSON.stringify(dbAtivos));
+            localStorage.setItem('escala_dados', JSON.stringify(dbDados));
+            localStorage.setItem('escala_ocorrencias', JSON.stringify(dbOcorr));
+
+            alteracoesTemporariasStatus = {};
+            document.getElementById('txtOcorrencias').value = '';
+
+            renderizarColaboradoresBase();
+            atualizarTelaEscala();
+            alert('Dia completamente limpo!');
+        }
+
+        // --- ABA DE COMPARTILHAMENTO UNIFICADO (OP + EMP) ---
+        function obterDadosConsolidadosDia() {
+            const dataIso = document.getElementById('dataEscalaNavegacao').value;
+            const colabs = JSON.parse(localStorage.getItem('colaboradores')) || [];
+            const dbAtivos = JSON.parse(localStorage.getItem('escala_ativos_dia')) || {};
+            const ativosDia = dbAtivos[dataIso] || [];
+            
+            const dbDados = JSON.parse(localStorage.getItem('escala_dados')) || {};
+            const escalaDadosSalvos = dbDados[dataIso] || {};
+            const ocorrencias = JSON.parse(localStorage.getItem('escala_ocorrencias')) || {};
+
+            let totais = { PRESENTE: 0, FALTA: 0, FOLGA: 0, ATESTADO: 0 };
+            let listaOp = [];
+            let listaEmp = [];
+
+            colabs.forEach(c => {
+                if(ativosDia.includes(c.id)) {
+                    let st = 'PRESENTE';
+                    if(alteracoesTemporariasStatus[c.id] !== undefined) st = alteracoesTemporariasStatus[c.id];
+                    else if(escalaDadosSalvos[c.id] !== undefined) st = escalaDadosSalvos[c.id];
+
+                    totais[st]++;
+                    const itemText = `• ${c.nome} (${c.categoria || 'OP. DIA'}${c.matricula ? ' | M: '+c.matricula : ''}) -> [${st}]`;
+                    
+                    if((c.categoria || '').startsWith('EMP.')) {
+                        listaEmp.push(itemText);
+                    } else {
+                        listaOp.push(itemText);
+                    }
+                }
+            });
+
+            return {
+                dataStr: dataIso.split('-').reverse().join('/'),
+                listaOp: listaOp,
+                listaEmp: listaEmp,
+                totais: totais,
+                ocorrencias: ocorrencias[dataIso] || document.getElementById('txtOcorrencias').value || 'Sem novidades.'
+            };
+        }
+
+        function enviarEmailEscalaCompleta() {
+            const dados = obterDadosConsolidadosDia();
+            
+            let assunto = encodeURIComponent(`Escala Consolidada Geral - ${dados.dataStr}`);
+            let corpo = `📋 RELATÓRIO DE ESCALA CONSOLIDADA - ${dados.dataStr}\n`;
+            corpo += `───────────────────────────────────\n\n`;
+
+            corpo += `🔹 UNIDADE / OPERADORES:\n`;
+            if(dados.listaOp.length === 0) corpo += `  (Nenhum ativo)\n`;
+            else dados.listaOp.forEach(l => corpo += `  ${l}\n`);
+
+            corpo += `\n🔸 AUXILIARES / EMPACOTARES:\n`;
+            if(dados.listaEmp.length === 0) corpo += `  (Nenhum ativo)\n`;
+            else dados.listaEmp.forEach(l => corpo += `  ${l}\n`);
+
+            corpo += `\n📊 RESUMO GERAL DO DIA (OP + EMP):\n`;
+            corpo += `  🟢 PRES: ${dados.totais.PRESENTE} | 🔴 FAL: ${dados.totais.FALTA} | 🟡 FOL: ${dados.totais.FOLGA} | 🔵 ATE: ${dados.totais.ATESTADO}\n\n`;
+
+            corpo += `📝 OCORRÊNCIAS UNIFICADAS:\n${dados.ocorrencias}\n\n`;
+            corpo += `Emitido automaticamente via App Escala de Bolso.`;
+
+            window.location.href = `mailto:?subject=${assunto}&body=${encodeURIComponent(corpo)}`;
+        }
+
+        function enviarWhatsApp() {
+            const dados = obterDadosConsolidadosDia();
+            
+            let m = `*📋 ESCALA CONSOLIDADA GERAL - ${dados.dataStr}*\n───────────────────\n\n`;
+            
+            m += `*🔹 OPERADORES:*\n`;
+            if(dados.listaOp.length === 0) m += `_(Nenhum ativo)_\n`;
+            else dados.listaOp.forEach(l => m += `${l}\n`);
+
+            m += `\n*🔸 EMPACOTARES:*\n`;
+            if(dados.listaEmp.forEach(l => m += `${l}\n`);
+
+            m += `\n*📊 BALANÇO GERAL (OP + EMP):*\n`;
+            m += `🟢 PRES: *${dados.totais.PRESENTE}* | 🔴 FAL: *${dados.totais.FALTA}*\n🟡 FOL: *${dados.totais.FOLGA}* | 🔵 ATE: *${dados.totais.ATESTADO}*\n\n`;
+            
+            m += `*📝 OCORRÊNCIAS:*\n_${dados.ocorrencias}_`;
+            window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(m), '_blank');
+        }
+
+        function gerarPDF() {
+            const dados = obterDadosConsolidadosDia();
+            const originalContainer = document.getElementById('area-impressao');
+            const clone = originalContainer.cloneNode(true);
+            clone.style.width = '100%';
+            
+            clone.querySelector('#tituloDataBr').innerText = `ESCALA CONSOLIDADA GERAL: ${dados.dataStr}`;
+            clone.querySelector('#subtituloTipoEscala').innerText = "CONSOLIDADO: OPERADORES & EMPACOTARES";
+            
+            const containerLista = clone.querySelector('#lista-operadores-escala');
+            containerLista.innerHTML = '';
+            
+            const colabs = JSON.parse(localStorage.getItem('colaboradores')) || [];
+            const dbAtivos = JSON.parse(localStorage.getItem('escala_ativos_dia')) || {};
+            const dataIso = document.getElementById('dataEscalaNavegacao').value;
+            const ativosDia = dbAtivos[dataIso] || [];
+            const dbDados = JSON.parse(localStorage.getItem('escala_dados')) || {};
+            const escalaDadosSalvos = dbDados[dataIso] || {};
+
+            const todosAtivos = colabs.filter(c => ativosDia.includes(c.id));
+            
+            todosAtivos.forEach(c => {
+                let st = 'PRESENTE';
+                if(alteracoesTemporariasStatus[c.id] !== undefined) st = alteracoesTemporariasStatus[c.id];
+                else if(escalaDadosSalvos[c.id] !== undefined) st = escalaDadosSalvos[c.id];
+
+                const matTexto = c.matricula ? ` | M: ${c.matricula}` : '';
+                containerLista.innerHTML += `
+                    <div class="item-bloco-operador mb-1 d-flex gap-1 align-items-center">
+                        <div class="btn status-${st} text-start flex-grow-1 py-2 px-3 d-flex justify-content-between align-items-center" style="pointer-events:none; border-radius:6px;">
+                            <span class="fw-bold" style="font-size:13px;">${c.nome} <small style="font-size:10px; opacity:0.8;">(${c.categoria || 'OP. DIA'}${matTexto})</small></span>
+                            <span class="badge bg-black bg-opacity-25 text-white" style="font-size: 10px;">${st}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            clone.querySelector('#c-pres').innerText = dados.totais.PRESENTE;
+            clone.querySelector('#c-fal').innerText = dados.totais.FALTA;
+            clone.querySelector('#c-fol').innerText = dados.totais.FOLGA;
+            clone.querySelector('#c-ate').innerText = dados.totais.ATESTADO;
+            clone.querySelector('#txtOcorrencias').value = dados.ocorrencias;
+
+            const agora = new Date();
+            const dataHoraFormatada = agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            const rodape = clone.querySelector('#rodapePdf');
+            rodape.innerText = `Relatório Geral Emitido em: ${dataHoraFormatada}`;
+            rodape.style.display = 'block';
+
+            const opt = {
+                margin: [12, 12, 12, 12],
+                filename: `escala-geral-${dataIso.replace(/-/g, '_')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(clone).save();
+        }
+
+        // --- ABA 3: FALTAS DO DIA ---
+        function gerarRelatorioFaltas() {
+            const dataIso = document.getElementById('dataEscalaNavegacao').value;
+            const colabs = JSON.parse(localStorage.getItem('colaboradores')) || [];
+            const dbDados = JSON.parse(localStorage.getItem('escala_dados')) || {};
+            const escalaDadosSalvos = dbDados[dataIso] || {};
+            const dbAtivos = JSON.parse(localStorage.getItem('escala_ativos_dia')) || {};
+            const ativosDia = dbAtivos[dataIso] || [];
+            
+            const tabela = document.getElementById('tabelaFaltasCorpo');
+            tabela.innerHTML = '';
+
+            const faltosos = colabs.filter(c => {
+                if(!ativosDia.includes(c.id)) return false;
+                let st = 'PRESENTE';
+                if(alteracoesTemporariasStatus[c.id] !== undefined) st = alteracoesTemporariasStatus[c.id];
+                else if(escalaDadosSalvos[c.id] !== undefined) st = escalaDadosSalvos[c.id];
+                return st === 'FALTA';
+            });
+
+            if(faltosos.length === 0) {
+                tabela.innerHTML = `<tr><td colspan="3" class="text-center text-success py-3 fw-bold">🟢 Nenhuma falta registrada (OP + EMP) nesta data!</td></tr>`;
+                return;
+            }
+
+            faltosos.forEach(c => {
+                tabela.innerHTML += `
+                    <tr class="table-danger">
+                        <td class="fw-bold">${c.nome}</td>
+                        <td><span class="badge bg-dark">${c.categoria || 'OP. DIA'}</span></td>
+                        <td class="text-center fw-bold text-danger">🔴 FALTA</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function gerarPDFFaltas() {
+            const dataIso = document.getElementById('dataEscalaNavegacao').value;
+            const partes = dataIso.split('-');
+            const el = document.getElementById('tabelaFaltasCorpo').parentElement.parentElement;
+            const opt = {
+                margin: [15, 15, 15, 15],
+                filename: `relatorio-faltas-geral-${partes[2]}-${partes[1]}-${partes[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(el).save();
+        }
+
+        function enviarEmailFaltas() {
+            const email = document.getElementById('emailDestino').value.trim();
+            if(!email) { alert('Insira o e-mail de destino.'); return; }
+
+            const dataIso = document.getElementById('dataEscalaNavegacao').value;
+            const colabs = JSON.parse(localStorage.getItem('colaboradores')) || [];
+            const dbDados = JSON.parse(localStorage.getItem('escala_dados')) || {};
+            const escalaDadosSalvos = dbDados[dataIso] || {};
+            const dbAtivos = JSON.parse(localStorage.getItem('escala_ativos_dia')) || {};
+            const ativosDia = dbAtivos[dataIso] || [];
+
+            const faltosos = colabs.filter(c => {
+                if(!ativosDia.includes(c.id)) return false;
+                let st = 'PRESENTE';
+                if(alteracoesTemporariasStatus[c.id] !== undefined) st = alteracoesTemporariasStatus[c.id];
+                else if(escalaDadosSalvos[c.id] !== undefined) st = escalaDadosSalvos[c.id];
+                return st === 'FALTA';
+            });
+            
+            let assunto = encodeURIComponent(`Relatório Geral Absenteísmo - ${dataIso.split('-').reverse().join('/')}`);
+            let corpo = `Olá,\n\nSegue a listagem geral unificada de ausências operacionais (OP e EMP) do dia ${dataIso.split('-').reverse().join('/')}:\n\n`;
+
+            if(faltosos.length === 0) {
+                corpo += `🟢 Nenhuma falta registrada no sistema hoje.`;
+            } else {
+                faltosos.forEach((c, idx) => {
+                    corpo += `${idx + 1}. ${c.nome} [${c.categoria || 'OP. DIA'}]\n`;
+                });
+            }
+            corpo += `\n\nEmitido via App Escala de Bolso.`;
+            window.location.href = `mailto:${email}?subject=${assunto}&body=${encodeURIComponent(corpo)}`;
+        }
+    </script>
+</body>
+</html>
