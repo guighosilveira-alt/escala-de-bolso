@@ -334,26 +334,21 @@
             localStorage.setItem('escala_ativos_dia', JSON.stringify(ativosDia));
         }
 
-        function efectuarLogin() {
-            // Criado mapeamento para aceitar ambas chamadas (com ou sem 'c')
-            efetuarLogin();
-        }
-
         function efetuarLogin() {
-            const u = document.getElementById('loginUser').value.trim();
-            const s = document.getElementById('loginPass').value.trim();
-            const usuarios = JSON.parse(localStorage.getItem('usuarios'));
+    const u = document.getElementById('loginUser').value.trim();
+    const s = document.getElementById('loginPass').value.trim();
+    const usuarios = JSON.parse(localStorage.getItem('usuarios'));
 
-            if (usuarios[u] && usuarios[u] === s) {
-                usuarioLogado = true;
-                document.getElementById('telaLogin').classList.add('escondido');
-                document.getElementById('appPrincipal').classList.remove('escondido');
-                renderizarColaboradoresBase();
-            } else {
-                document.getElementById('loginErro').classList.remove('escondido');
-            }
+    if (usuarios[u] && usuarios[u] === s) {
+        usuarioLogado = true;
+        document.getElementById('telaLogin').classList.add('escondido');
+        document.getElementById('appPrincipal').classList.remove('escondido');
+        renderizarColaboradoresBase();
+    } else {
+        document.getElementById('loginErro').classList.remove('escondido');
+    }
         }
-
+        
         function efetuarLogout() {
             usuarioLogado = false;
             document.getElementById('loginUser').value = '';
