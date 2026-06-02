@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
@@ -334,6 +334,11 @@
             localStorage.setItem('escala_ativos_dia', JSON.stringify(ativosDia));
         }
 
+        function efectuarLogin() {
+            // Criado mapeamento para aceitar ambas chamadas (com ou sem 'c')
+            efetuarLogin();
+        }
+
         function efetuarLogin() {
     const u = document.getElementById('loginUser').value.trim();
     const s = document.getElementById('loginPass').value.trim();
@@ -347,8 +352,9 @@
     } else {
         document.getElementById('loginErro').classList.remove('escondido');
     }
-        }
-        
+}
+
+
         function efetuarLogout() {
             usuarioLogado = false;
             document.getElementById('loginUser').value = '';
@@ -747,7 +753,8 @@
             else dados.listaOp.forEach(l => m += `${l}\n`);
 
             m += `\n*🔸 EMPACOTARES:*\n`;
-            if(dados.listaEmp.forEach(l => m += `${l}\n`);
+            if(dados.listaEmp.length === 0) m += `_(Nenhum ativo)_\n`;
+            else dados.listaEmp.forEach(l => m += `${l}\n`);
 
             m += `\n*📊 BALANÇO GERAL (OP + EMP):*\n`;
             m += `🟢 PRES: *${dados.totais.PRESENTE}* | 🔴 FAL: *${dados.totais.FALTA}*\n🟡 FOL: *${dados.totais.FOLGA}* | 🔵 ATE: *${dados.totais.ATESTADO}*\n\n`;
